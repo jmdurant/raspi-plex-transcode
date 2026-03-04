@@ -150,8 +150,9 @@ def profile_select(config, arguments):
   if "by_argument" in config["profile_select"]:
     for condition in config["profile_select"]["by_argument"]:
       profilesByGroup = profile_condition_arg(condition, arguments, config, profilesByGroup)
-  # -> By Codec
-  if "by_codec" in config["profile_select"]:
+  # -> By Codec (skip ffprobe for direct streams where all codecs are copy)
+  isDirectStream = all(v == "copy" for k, v in arguments["output"].items() if k.startswith("-codec"))
+  if "by_codec" in config["profile_select"] and not isDirectStream:
     probeBin = resolve_absolute_path(config["ffprobe"])
     probeArgs = [ probeBin, "-v", "error", "-show_entries", "stream=codec_name", "-of", "default=noprint_wrappers=1:nokey=1", arguments["input"]["-i"] ]
     probeResult = subprocess.run(probeArgs, universal_newlines = True, stdout = subprocess.PIPE)

@@ -47,6 +47,15 @@ if [ ! -f "$SCRIPT_DIR/ffmpeg-transcode.yaml" ]; then
   cp "$SCRIPT_DIR/ffmpeg-transcode-example.yaml" "$SCRIPT_DIR/ffmpeg-transcode.yaml"
 fi
 
+# Grant plex user access to the wrapper via group permissions
+INSTALL_USER=$(stat -c '%U' "$SCRIPT_DIR")
+INSTALL_GROUP=$(stat -c '%G' "$SCRIPT_DIR")
+INSTALL_HOME=$(eval echo "~$INSTALL_USER")
+sudo usermod -aG "$INSTALL_GROUP" plex
+chmod g+rx "$INSTALL_HOME"
+chmod -R g+rX "$SCRIPT_DIR"
+echo "Granted plex user access via $INSTALL_GROUP group"
+
 # Restart Plex Media Server
 echo "Restarting Plex Media Server..."
 if sudo systemctl restart plexmediaserver; then

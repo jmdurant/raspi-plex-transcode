@@ -2,6 +2,8 @@
 'ffmpeg': 'plex-media-server-ffmpeg/ffmpeg'
 'ffprobe': 'plex-media-server-ffmpeg/ffprobe'
 'log': '/config/plex-transcoder.log'
+'strip_filters':
+  - 'yadif'
 'profiles':
   'mkv2mpegts_stream':
     'group': 'format'

@@ -214,8 +214,9 @@ def profile_parameters(profiles):
     if profile["output"] is not None:
       for argName in profile["output"]:
         argumentRepl["output"][argName] = profile["output"][argName]
-  # Strip configured filters from -filter_complex (e.g., yadif deinterlacing)
-  stripFilters = config.get("strip_filters", [])
+  # Strip configured filters only when using hardware encoder (HD/4K)
+  usingHwEncoder = any(v.endswith("_v4l2m2m") for v in argumentRepl["output"].values() if isinstance(v, str))
+  stripFilters = config.get("strip_filters", []) if usingHwEncoder else []
 
   # When using system FFmpeg, strip Plex-specific args it doesn't understand
   stripPlexArgs = config.get("strip_plex_args", False)

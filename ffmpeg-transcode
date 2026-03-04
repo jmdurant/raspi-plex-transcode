@@ -206,6 +206,8 @@ def profile_parameters(profiles):
   plexArgsWithValue = {"-loglevel_plex", "-progressurl"}
   # Args without values (flag only, no following arg)
   plexArgsNoValue = {"-xioerror"}
+  # Plex-specific fflags that standard FFmpeg doesn't support
+  plexFflags = {"discardcorruptts", "fillwallclockdts"}
 
   # Build parameter list
   parameters = []
@@ -225,6 +227,22 @@ def profile_parameters(profiles):
     if arg in plexArgsWithValue:
       skipNext = True
       continue
+    # Strip Plex-specific fflags from -fflags values
+    if argName == "-fflags" and not arg.startswith("-"):
+      filtered = arg
+      for pf in plexFflags:
+        filtered = filtered.replace(pf, "")
+      # Clean up leftover + signs
+      while "++" in filtered:
+        filtered = filtered.replace("++", "+")
+      filtered = filtered.strip("+")
+      if filtered:
+        arg = filtered
+      else:
+        # All fflags were Plex-specific, remove the -fflags entirely
+        del parameters[-1]
+        argName = None
+        continue
     # Apply replacement if present
     replacement = None
     if argName is not None:

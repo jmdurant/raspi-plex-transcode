@@ -62,11 +62,12 @@ echo "[OK] python3-yaml installed"
 
 # Create config file pointing at system FFmpeg
 if [ ! -f "$SCRIPT_DIR/ffmpeg-transcode.yaml" ]; then
-  cat > "$SCRIPT_DIR/ffmpeg-transcode.yaml" <<YAMLEOF
+  cat > "$SCRIPT_DIR/ffmpeg-transcode.yaml" <<'YAMLEOF'
 'version': '1.0.0-1'
-'ffmpeg': '$FFMPEG_PATH'
-'ffprobe': '$FFPROBE_PATH'
+'ffmpeg': '/usr/bin/ffmpeg'
+'ffprobe': '/usr/bin/ffprobe'
 'log': '/var/lib/plexmediaserver/plex-transcoder.log'
+'debug': true
 'profiles':
   'mkv2mpegts_stream':
     'group': 'format'
@@ -85,21 +86,21 @@ if [ ! -f "$SCRIPT_DIR/ffmpeg-transcode.yaml" ]; then
       'target': 'h264_v4l2m2m'
       'output':
         '-b:v': '5M'
-        '-bufsize:\$stream\$': '10M'
-        '-crf:\$stream\$': '**REMOVE**'
-        '-maxrate:\$stream\$': '**REMOVE**'
-        '-x264opts:\$stream\$': '**REMOVE**'
+        '-bufsize:$stream$': '10M'
+        '-crf:$stream$': '**REMOVE**'
+        '-maxrate:$stream$': '**REMOVE**'
+        '-x264opts:$stream$': '**REMOVE**'
     -
       'source': 'flac'
       'target': 'aac'
       'output':
-        '-b:\$stream\$': '256k'
+        '-b:$stream$': '256k'
       'priority': 10
     -
       'source': 'eac3'
       'target': 'aac'
       'output':
-        '-b:\$stream\$': '256k'
+        '-b:$stream$': '256k'
       'priority': 10
   'by_argument':
     -

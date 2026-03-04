@@ -152,6 +152,14 @@ def profile_select(config, arguments):
       profilesByGroup = profile_condition_arg(condition, arguments, config, profilesByGroup)
   # -> By Codec (skip ffprobe for direct streams where all codecs are copy)
   isDirectStream = all(v == "copy" for k, v in arguments["output"].items() if k.startswith("-codec"))
+  # Detect output resolution from scale filter — skip hw encoder for SD
+  outputWidth = 0
+  for argKey, argVal in arguments["output"].items():
+    if argKey == "-filter_complex" and argVal:
+      scaleMatch = re.search(r'scale=w=(\d+)', argVal)
+      if scaleMatch:
+        outputWidth = int(scaleMatch.group(1))
+  minHwWidth = config.get("min_hw_width", 1280)
   if "by_codec" in config["profile_select"] and not isDirectStream:
     probeBin = resolve_absolute_path(config["ffprobe"])
     probeArgs = [ probeBin, "-v", "error", "-show_entries", "stream=codec_name", "-of", "default=noprint_wrappers=1:nokey=1", arguments["input"]["-i"] ]
@@ -160,6 +168,10 @@ def profile_select(config, arguments):
     for probeIndex, probeCodec in enumerate(probeCodecs):
       for condition in config["profile_select"]["by_codec"]:
         if condition["source"] == probeCodec:
+          # Skip video hw encoder for SD content (width < min_hw_width)
+          isVideoCodec = condition["target"].endswith("_v4l2m2m")
+          if isVideoCodec and outputWidth > 0 and outputWidth < minHwWidth:
+            continue
           conditionPriority = 0
           if "priority" in condition:
             conditionPriority = condition["priority"]

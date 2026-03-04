@@ -114,6 +114,7 @@ if [ "$FFMPEG_COMPILE" == "yes" ]; then
   # Apply patches
   echo "- Apply patches"
   patch -p1 -N < "$SCRIPT_DIR/patches/0001-avcodec-v4l2_m2m_dec-dequeue-frame-if-input-isn-t-re.patch" || true
+  patch -p1 -N < "$SCRIPT_DIR/patches/0002-v4l2-fix-stride-alignment-for-encoder.patch" || true
   # Configure
   echo "- Configure"
   if ! eval "bash ./configure $FFMPEG_CONFIGURE_FLAGS"; then

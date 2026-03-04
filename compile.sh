@@ -39,30 +39,21 @@ case $SYSTEM_DISTRO in
 esac
 
 # URL for the source code of the plex ffmpeg-fork
-PLEX_FFMPEG_SOURCE_URL="https://downloads.plex.tv/ffmpeg-source/plex-media-server-ffmpeg-gpl-62cc2bc17d.tar.gz"
-if [ -f "/usr/lib/plexmediaserver/Resources/LICENSE" ]; then
-  PLEX_FFMPEG_SOURCE_URL_PARSED=$(cat /usr/lib/plexmediaserver/Resources/LICENSE | grep 'Plex Transcoder' | sed 's/.*: //' || true)
-  if [ -n "$PLEX_FFMPEG_SOURCE_URL_PARSED" ]; then
-    PLEX_FFMPEG_SOURCE_URL="$PLEX_FFMPEG_SOURCE_URL_PARSED"
-  fi
-fi
-PLEX_FFMPEG_SOURCE_URL_PRESENT=""
-if [ -f "$SCRIPT_DIR/ffmpeg-source-url" ]; then
-  PLEX_FFMPEG_SOURCE_URL_PRESENT=$(cat "$SCRIPT_DIR/ffmpeg-source-url")
-  echo "Present ffmpeg source obtained from $PLEX_FFMPEG_SOURCE_URL_PRESENT"
-fi
+# Plex now serves the latest source at a single URL
+PLEX_FFMPEG_SOURCE_URL="https://downloads.plex.tv/ffmpeg-source/"
 
-# Download source archive
-if [ "$PLEX_FFMPEG_SOURCE_URL" != "$PLEX_FFMPEG_SOURCE_URL_PRESENT" ]; then
-  echo "Downloading latest ffmpeg source from: $PLEX_FFMPEG_SOURCE_URL"
+# Download source archive (re-download if no tarball exists)
+if [ ! -f "$SCRIPT_DIR/plex-media-server-ffmpeg.tar.gz" ]; then
+  echo "Downloading ffmpeg source from: $PLEX_FFMPEG_SOURCE_URL"
   if ! wget -q "$PLEX_FFMPEG_SOURCE_URL" -O "$SCRIPT_DIR/plex-media-server-ffmpeg.tar.gz"; then
     echo "ERROR: Download failed!"
+    rm -f "$SCRIPT_DIR/plex-media-server-ffmpeg.tar.gz"
     exit 1
   fi
-  echo "$PLEX_FFMPEG_SOURCE_URL" > "$SCRIPT_DIR/ffmpeg-source-url"
   EXTRACT_SOURCE="yes"
 else
-  echo "Skipping download. Latest source already downloaded."
+  echo "Skipping download. Source archive already present."
+  echo "To re-download, delete plex-media-server-ffmpeg.tar.gz and run again."
 fi
 
 # Extract source

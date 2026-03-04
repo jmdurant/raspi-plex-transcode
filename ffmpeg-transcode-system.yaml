@@ -3,6 +3,7 @@
 'ffprobe': '/usr/bin/ffprobe'
 'log': '/var/lib/plexmediaserver/plex-transcoder.log'
 'debug': true
+'strip_plex_args': true
 'profiles':
   'mkv2mpegts_stream':
     'group': 'format'

@@ -17,25 +17,33 @@ if [ ! -f "/usr/lib/plexmediaserver/Plex Transcoder" ] && [ ! -L "/usr/lib/plexm
 fi
 echo "[OK] Plex Media Server found"
 
-# Check that ffmpeg is installed
-if ! command -v ffmpeg &> /dev/null; then
-  echo "ffmpeg not found, installing..."
+# Install system ffmpeg if not present
+if [ ! -f "/usr/bin/ffmpeg" ]; then
+  echo "Installing system ffmpeg..."
   if ! sudo apt install -y ffmpeg; then
     echo "ERROR: Failed to install ffmpeg!"
     exit 1
   fi
 fi
-echo "[OK] FFmpeg found: $(which ffmpeg)"
 
-# Check that ffprobe is installed
-if ! command -v ffprobe &> /dev/null; then
-  echo "ERROR: ffprobe not found!"
+# Use /usr/bin paths explicitly (avoid custom builds in /usr/local/bin)
+FFMPEG_PATH="/usr/bin/ffmpeg"
+FFPROBE_PATH="/usr/bin/ffprobe"
+
+if [ ! -f "$FFMPEG_PATH" ]; then
+  echo "ERROR: $FFMPEG_PATH not found!"
   exit 1
 fi
-echo "[OK] FFprobe found: $(which ffprobe)"
+echo "[OK] FFmpeg found: $FFMPEG_PATH"
+
+if [ ! -f "$FFPROBE_PATH" ]; then
+  echo "ERROR: $FFPROBE_PATH not found!"
+  exit 1
+fi
+echo "[OK] FFprobe found: $FFPROBE_PATH"
 
 # Check for h264_v4l2m2m encoder support
-if ! ffmpeg -encoders 2>/dev/null | grep -q "h264_v4l2m2m"; then
+if ! "$FFMPEG_PATH" -encoders 2>/dev/null | grep -q "h264_v4l2m2m"; then
   echo "ERROR: System FFmpeg does not support h264_v4l2m2m encoder!"
   echo "You may need to compile FFmpeg manually using ./compile.sh"
   exit 1
@@ -54,8 +62,6 @@ echo "[OK] python3-yaml installed"
 
 # Create config file pointing at system FFmpeg
 if [ ! -f "$SCRIPT_DIR/ffmpeg-transcode.yaml" ]; then
-  FFMPEG_PATH=$(which ffmpeg)
-  FFPROBE_PATH=$(which ffprobe)
   cat > "$SCRIPT_DIR/ffmpeg-transcode.yaml" <<YAMLEOF
 'version': '1.0.0-1'
 'ffmpeg': '$FFMPEG_PATH'

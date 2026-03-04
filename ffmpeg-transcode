@@ -34,7 +34,7 @@ def load_configuration():
     configFallback = "ffmpeg-transcode-docker.yaml"
   if not os.path.isfile(configFile):
     # Download default config file via wget
-    subprocess.run(["wget", "-q", "https://github.com/ForsakenNGS/raspi-plex-transcode/raw/main/"+configFallback, "-O", configFile]);
+    subprocess.run(["wget", "-q", "https://github.com/jmdurant/raspi-plex-transcode/raw/main/"+configFallback, "-O", configFile]);
   # Open and parse configuration file
   with open(configFile, "r") as stream:
     try:

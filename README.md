@@ -19,7 +19,7 @@ https://forums.plex.tv/t/hardware-transcoding-for-raspberry-pi-4-plex-media-serv
 cd ~
 mkdir plex-backup
 cp "/usr/lib/plexmediaserver/Plex Transcoder" plex-backup/
-git clone https://github.com/ForsakenNGS/raspi-plex-transcode.git
+git clone https://github.com/jmdurant/raspi-plex-transcode.git
 cd raspi-plex-transcode
 ./compile.sh
 ./install.sh
@@ -31,7 +31,7 @@ Log into your pi (as user `pi`) and cd into your home directory. (You can instal
 
 Download this repository with git and cd into it using:
 ```
-git clone https://github.com/ForsakenNGS/raspi-plex-transcode.git
+git clone https://github.com/jmdurant/raspi-plex-transcode.git
 cd raspi-plex-transcode
 ```
 

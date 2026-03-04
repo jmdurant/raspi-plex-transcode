@@ -93,7 +93,9 @@ if [ "$INSTALL_DEPENDENCIES" == "yes" ]; then
 fi
 
 # Compile ffmpeg
-if [ -f "$SCRIPT_DIR/ffmpeg-compiled" ]; then
+if [ ! -f "$SCRIPT_DIR/plex-media-server-ffmpeg/ffmpeg" ]; then
+  FFMPEG_COMPILE="yes"
+elif [ -f "$SCRIPT_DIR/ffmpeg-compiled" ]; then
   FFMPEG_CONFIGURE_FLAGS_USED=`cat "$SCRIPT_DIR/ffmpeg-compiled"`
   if [ "$FFMPEG_CONFIGURE_FLAGS_USED" != "$FFMPEG_CONFIGURE_FLAGS" ]; then
     FFMPEG_COMPILE="yes"

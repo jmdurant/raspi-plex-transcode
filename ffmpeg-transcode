@@ -393,6 +393,21 @@ if config is None:
 # Parse arguments
 arguments = parse_arguments()
 
+# Check if this is a direct stream (all codecs copy) — pass to original Plex binary
+isDirectStream = all(v == "copy" for k, v in arguments["output"].items() if k.startswith("-codec"))
+if isDirectStream:
+  plexBin = os.path.dirname(os.path.realpath(__file__)).replace("raspi-plex-transcode", "") + "Plex Transcoder Backup"
+  if not os.path.isfile(plexBin):
+    plexBin = "/usr/lib/plexmediaserver/Plex Transcoder Backup"
+  parameters = sys.argv[1:]
+  parameters.insert(0, plexBin)
+  if ("log" in config) and ("debug" in config):
+    with open(config["log"], "a") as logfile:
+      logfile.write("Direct stream at "+datetime.now().strftime("%Y-%m-%d %H:%M:%S")+"\n")
+      logfile.write("Commandline: "+join(parameters)+"\n\n\n")
+  result = subprocess.run(parameters, stderr = subprocess.PIPE)
+  sys.exit(result.returncode)
+
 # Try to pass transcode to proxy
 if not proxy_transcode(config):
   # No proxy configured / available

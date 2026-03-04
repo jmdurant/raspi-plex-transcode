@@ -1,6 +1,7 @@
 'version': '1.0.0-1'
 'ffmpeg': 'plex-media-server-ffmpeg/ffmpeg'
 'ffprobe': 'plex-media-server-ffmpeg/ffprobe'
+'debug': true
 'log': '/var/lib/plexmediaserver/plex-transcoder.log'
 'strip_filters':
   - 'yadif'

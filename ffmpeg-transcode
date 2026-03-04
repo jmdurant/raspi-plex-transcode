@@ -201,12 +201,23 @@ def profile_parameters(profiles):
     if profile["output"] is not None:
       for argName in profile["output"]:
         argumentRepl["output"][argName] = profile["output"][argName]
+  # Plex-specific args that standard FFmpeg doesn't understand
+  plexOnlyArgs = {"-loglevel_plex", "-xioerror", "-progressurl"}
+
   # Build parameter list
   parameters = []
   argSection = "input"
   argName = None
   argNewAdded = False
+  skipNext = False
   for arg in sys.argv[1:]:
+    # Skip Plex-specific arguments and their values
+    if skipNext:
+      skipNext = False
+      continue
+    if arg in plexOnlyArgs:
+      skipNext = True
+      continue
     # Apply replacement if present
     replacement = None
     if argName is not None:

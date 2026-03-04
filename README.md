@@ -1,21 +1,42 @@
 # raspi-plex-transcode
-Help for manipulating the plex-media-server transcode on the raspberry pi
 
-# Ensure hardware decoding works and your firmware is up to date
+Hardware-accelerated video transcoding for Plex Media Server on Raspberry Pi 4, using the V4L2M2M hardware encoder.
 
-As mentioned in this forum post: https://forums.raspberrypi.com/viewtopic.php?t=262558
+## How it works
 
-Hardware decoding of h264 will NOT WORK if the gpu memory is limited. I had added `gpu_mem=16` in my `config.txt` since I run my pi headless and thought it to be a waste of ram. Setting it to `gpu_mem=128` (the default) should be fine.
+A Python wrapper script intercepts Plex's transcoder calls and modifies the FFmpeg arguments to use the Pi 4's hardware encoder (`h264_v4l2m2m`) instead of software encoding. This reduces CPU usage dramatically (typically ~35% vs 100%).
 
-Note: On Debian Bookworm, the config file has moved to `/boot/firmware/config.txt` (previously `/boot/config.txt`).
+The wrapper:
+- Replaces software video encoding with `h264_v4l2m2m` hardware encoding for both h264 and h265 sources
+- Adjusts encoder parameters (bitrate, buffer size) for the hardware encoder
+- Converts incompatible audio formats (FLAC, EAC3) to AAC
+- Converts MKV container to MPEG-TS for streaming compatibility
 
-Brought to my attention by "fancybits" in the plex forums it is recommended to update the rpi kernel and firmware by running `sudo rpi-update`.
+## Requirements
 
-https://forums.plex.tv/t/hardware-transcoding-for-raspberry-pi-4-plex-media-server/538779/236
+- Raspberry Pi 4 (BCM2711 with hardware H.264 encoder)
+- Plex Media Server installed
+- GPU memory set to at least 128MB (the default)
+  - Check `/boot/firmware/config.txt` on Debian Bookworm (`/boot/config.txt` on older releases)
+  - Ensure `gpu_mem` is not set below 128
 
-# Quick Install (Recommended)
+## Install (Recommended)
 
-Uses the system FFmpeg package — no compiling required. Works on Debian Bookworm and Raspberry Pi OS.
+Compiles Plex's FFmpeg fork with hardware encoding support. This provides full compatibility with all Plex features including Live TV.
+
+```
+cd ~
+git clone https://github.com/jmdurant/raspi-plex-transcode.git
+cd raspi-plex-transcode
+./compile.sh
+./install.sh
+```
+
+Note: Compiling FFmpeg on a Raspberry Pi 4 takes 30-60 minutes.
+
+## Quick Install (Alternative)
+
+Uses the system FFmpeg package instead of compiling. Faster to set up but may not support all Plex features (e.g., Live TV tuner streams).
 
 ```
 cd ~
@@ -24,135 +45,51 @@ cd raspi-plex-transcode
 ./quick-install.sh
 ```
 
-This will:
-- Install system FFmpeg (if not present) and verify `h264_v4l2m2m` hardware encoder support
-- Install `python3-yaml` dependency
-- Back up the original Plex Transcoder
-- Install the wrapper script and create the config
-- Restart Plex Media Server
+## Scripts
 
-# Advanced Install (Compile Plex FFmpeg Fork)
+- `compile.sh` — Download, patch, and compile Plex's FFmpeg fork with V4L2M2M support
+- `install.sh` — Back up the original Plex Transcoder and install the wrapper (after running compile.sh)
+- `quick-install.sh` — Install using system FFmpeg (no compile needed)
+- `uninstall.sh` — Restore the original Plex Transcoder from backup
 
-If you need Plex-specific codecs (EAE) or want to use Plex's FFmpeg fork instead of the system package:
+## Uninstalling
 
 ```
-cd ~
-mkdir plex-backup
-cp "/usr/lib/plexmediaserver/Plex Transcoder" plex-backup/
-git clone https://github.com/jmdurant/raspi-plex-transcode.git
-cd raspi-plex-transcode
-./compile.sh
-./install.sh
+cd ~/raspi-plex-transcode
+./uninstall.sh
 ```
 
-Note: Compiling FFmpeg on a Raspberry Pi 4 can take 30-60 minutes.
+This restores the original Plex Transcoder from the backup created during install.
 
-# Getting started
+## Configuration
 
-Log into your pi (as user `pi`) and cd into your home directory. (You can install this somewhere else if you update the configuration file accordingly)
+The wrapper reads `ffmpeg-transcode.yaml` to determine how to modify Plex's FFmpeg arguments. The install scripts create this file automatically.
 
-Download this repository with git and cd into it using:
-```
-git clone https://github.com/jmdurant/raspi-plex-transcode.git
-cd raspi-plex-transcode
-```
+### Key settings
 
-From this point you can continue with one of the following utility scripts:
-- `quick-install.sh` **(Recommended)** Install using system FFmpeg with hardware encoding — no compiling needed
-- `compile.sh` Download the source of the plex ffmpeg-fork, install the required dependencies and compile it
-- `install.sh` Replace the original plex transcoder (after running compile.sh)
-- `uninstall.sh` Restore the original plex transcoder
+- **ffmpeg** — Path to the FFmpeg binary
+- **ffprobe** — Path to the FFprobe binary
+- **log** — Path to the transcode log file
+- **debug** — Set to `true` to enable logging of all transcode calls (useful for troubleshooting)
+- **strip_plex_args** — Set to `true` when using system FFmpeg to strip Plex-specific flags it doesn't understand
 
-**IMPORTANT: Backup your stuff! I'm doing my best to make the process as safe as possible, but there is always the chance that something goes wrong. Be warned!**
+### Codec rules (by_codec)
 
-Most important file to backup is the original plex transcoder found by default at `/usr/lib/plexmediaserver/Plex Transcoder` e.g.:
-```
-mkdir ~/plex-backup
-cp "/usr/lib/plexmediaserver/Plex Transcoder" ~/plex-backup/
-```
+The default configuration handles these codec conversions:
 
-# Compiling plex ffmpeg with custom options
+| Source | Target | Notes |
+|--------|--------|-------|
+| hevc (h265) | h264_v4l2m2m | Hardware-encoded at 5Mbps |
+| h264 | h264_v4l2m2m | Hardware re-encode at 5Mbps |
+| flac | aac | Audio converted at 256k |
+| eac3 | aac | Audio converted at 256k |
 
-First of all make sure you are in the directory of this projects git repository.
+### Custom profiles
 
-Now simply run `./compile.sh` which will do the following:
-- Download the latest version of the plex-ffmpeg forks source code
-- Extract it
-- Install all required dependencies **(will ask for superuser permissions)**
-- Configure and compile the ffmpeg source code
+You can define custom profiles in the YAML config to override FFmpeg parameters based on input arguments or codecs. See `ffmpeg-transcode-example.yaml` for the full syntax.
 
-If you want to manually adjust the configure parameters you can do so in the first few lines of the `compile.sh` script.
-
-# Installing the wrapper script
-
-First of all make sure you are in the directory of this projects git repository.
-
-Now simply run `./install.sh` which will do the following:
-- Create a backup of the original plex transcoder script `/usr/lib/plexmediaserver/Plex Transcoder` as `/usr/lib/plexmediaserver/Plex Transcoder Backup` if not already present **(will ask for superuser permissions)**
-- Remove the original plex transcoder script `/usr/lib/plexmediaserver/Plex Transcoder` **(will ask for superuser permissions)**
-- Put a symlink in its place that will redirect all encoding calls to this projects wrapper script **(will ask for superuser permissions)**
-
-# Uninstalling the wrapper script
-
-First of all make sure you are in the directory of this projects git repository.
-
-Now simply run `./uninstall.sh` which will do the following:
-- Remove the original plex transcoder script `/usr/lib/plexmediaserver/Plex Transcoder` **(will ask for superuser permissions)**
-- Move the backup of the original plex transcoder script `/usr/lib/plexmediaserver/Plex Transcoder Backup` back into its proper place at `/usr/lib/plexmediaserver/Plex Transcoder` **(will ask for superuser permissions)**
-
-# Configuration
-
-The wrapper `ffmpeg-transcode` will replace the plex parameters according to the configuration file `ffmpeg-transcode.yaml`. An example can be found in this repository as instructed to download above. The following options are available:
-
-**executable** (required)
-
-Defines the ffmpeg executable that is invoked with the altered parameters. The default is `/home/pi/plex-media-server-ffmpeg/ffmpeg`
-
-**profiles** (required)
-
-A list of profiles indexed by name that are being used to adjust the plex parameters. Each profile requires an `input` and `output` key which defines overrides for the default parameters. An example as included in the default configuration:
-```
-'profiles':
-  'default':
-    'input':
-    'output':
-      '-codec:0': 'h264_v4l2m2m'
-      '-crf:0': '10'
-      '-minrate:0': '1M'
-      '-maxrate:0': '5M'
-      '-bufsize:0': '10M'
-      '-seg_duration': '2'
-```
-- Everything in the `input` section applies to the input stream (everything before the `-i filename` parameter).
-- Everything in the `output` section applies to the output stream (everything after the `-i filename` parameter).
-- Any valid ffmpeg parameter can be used.
-- Repetitions of the same parameter are currently not supported.
-
-**profile_select**
-
-Controls when certain profiles are used. The following child-keys are available:
-
-- **default** Defines a default profile which is used if no other rule matches. Example:
-```
-'profile_select':
-  'default': 'default'
-```
-
-- **by_argument** Defines conditions which will trigger a certain profile to be used.
-  - **argSection** One of either `input` or `output`. This will decide whether the script will check the given argument for the input or the output stream.
-  - **argName** The name of the argument as supplied by plex. e.g.: `-codec:0` will check the video codec, `-i` will check the input file.
-  - **type** What kind of condition will be checked. Available are:
-    - **exact** Matches if the given `value` parameter matches the value of the specified argument.
-    - **regex** Matches if the regex supplied within the `value` parameter matches the value of the specified argument.
-    - **present** Matches if the specified argument is present.
-    - **missing** Matches if the specified argument is missing.
-  - **ignorecase** Currently only used for the `regex` type. Makes the regular expression case insensitive.
-  - **value** The value used for matching with the `exact` and `regex` types.
-  - **profile** The target profile as defined in the `profiles` section that is used if the condition matches.
-  - **priority** A priority that is used when multiple conditions match. Higher is more important. If omitted the default priority of `0` is used.
-
-Example that will match if the path or filename contain the string `anime` somewhere:
-```
+Example — match files with "anime" in the path:
+```yaml
 'profile_select':
   'by_argument':
     -
@@ -164,6 +101,25 @@ Example that will match if the path or filename contain the string `anime` somew
       'profile': 'anime'
 ```
 
-# Research sources for configuration
+## Troubleshooting
 
-Encoding options for `h264_v4l2m2m`: https://github.com/raspberrypi/firmware/issues/1612
+Enable debug logging in `ffmpeg-transcode.yaml`:
+```yaml
+'debug': true
+```
+
+Then check the log after a transcode attempt:
+```
+cat /var/lib/plexmediaserver/plex-transcoder.log
+```
+
+## Supported distributions
+
+- Debian Bookworm (Raspberry Pi OS)
+- Raspbian
+- Manjaro Linux ARM
+
+## Resources
+
+- Encoding options for `h264_v4l2m2m`: https://github.com/raspberrypi/firmware/issues/1612
+- Plex hardware transcoding thread: https://forums.plex.tv/t/hardware-transcoding-for-raspberry-pi-4-plex-media-server/538779/236

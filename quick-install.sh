@@ -62,60 +62,7 @@ echo "[OK] python3-yaml installed"
 
 # Create config file pointing at system FFmpeg
 if [ ! -f "$SCRIPT_DIR/ffmpeg-transcode.yaml" ]; then
-  cat > "$SCRIPT_DIR/ffmpeg-transcode.yaml" <<'YAMLEOF'
-'version': '1.0.0-1'
-'ffmpeg': '/usr/bin/ffmpeg'
-'ffprobe': '/usr/bin/ffprobe'
-'log': '/var/lib/plexmediaserver/plex-transcoder.log'
-'debug': true
-'profiles':
-  'mkv2mpegts_stream':
-    'group': 'format'
-    'input':
-    'output':
-      '-segment_format': 'mpegts'
-  'mkv2mpegts_download':
-    'group': 'format'
-    'input':
-    'output':
-      '-f': 'mpegts'
-'profile_select':
-  'by_codec':
-    -
-      'source': 'hevc'
-      'target': 'h264_v4l2m2m'
-      'output':
-        '-b:v': '5M'
-        '-bufsize:$stream$': '10M'
-        '-crf:$stream$': '**REMOVE**'
-        '-maxrate:$stream$': '**REMOVE**'
-        '-x264opts:$stream$': '**REMOVE**'
-    -
-      'source': 'flac'
-      'target': 'aac'
-      'output':
-        '-b:$stream$': '256k'
-      'priority': 10
-    -
-      'source': 'eac3'
-      'target': 'aac'
-      'output':
-        '-b:$stream$': '256k'
-      'priority': 10
-  'by_argument':
-    -
-      'argSection': 'output'
-      'argName': '-segment_format'
-      'type': 'exact'
-      'value': 'matroska'
-      'profile': 'mkv2mpegts_stream'
-    -
-      'argSection': 'output'
-      'argName': '-f'
-      'type': 'exact'
-      'value': 'matroska'
-      'profile': 'mkv2mpegts_download'
-YAMLEOF
+  cp "$SCRIPT_DIR/ffmpeg-transcode-system.yaml" "$SCRIPT_DIR/ffmpeg-transcode.yaml"
   echo "[OK] Created ffmpeg-transcode.yaml (using $FFMPEG_PATH)"
 else
   echo "[OK] ffmpeg-transcode.yaml already exists (not overwritten)"

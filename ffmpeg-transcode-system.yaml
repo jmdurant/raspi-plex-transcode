@@ -1,0 +1,52 @@
+'version': '1.0.0-1'
+'ffmpeg': '/usr/bin/ffmpeg'
+'ffprobe': '/usr/bin/ffprobe'
+'log': '/var/lib/plexmediaserver/plex-transcoder.log'
+'debug': true
+'profiles':
+  'mkv2mpegts_stream':
+    'group': 'format'
+    'input':
+    'output':
+      '-segment_format': 'mpegts'
+  'mkv2mpegts_download':
+    'group': 'format'
+    'input':
+    'output':
+      '-f': 'mpegts'
+'profile_select':
+  'by_codec':
+    -
+      'source': 'hevc'
+      'target': 'h264_v4l2m2m'
+      'output':
+        '-b:v': '5M'
+        '-bufsize:$stream$': '10M'
+        '-crf:$stream$': '**REMOVE**'
+        '-maxrate:$stream$': '**REMOVE**'
+        '-x264opts:$stream$': '**REMOVE**'
+    -
+      'source': 'flac'
+      'target': 'aac'
+      'output':
+        '-b:$stream$': '256k'
+      'priority': 10
+    -
+      'source': 'eac3'
+      'target': 'aac'
+      'output':
+        '-b:$stream$': '256k'
+      'priority': 10
+  'by_argument':
+    -
+      'argSection': 'output'
+      'argName': '-segment_format'
+      'type': 'exact'
+      'value': 'matroska'
+      'profile': 'mkv2mpegts_stream'
+    -
+      'argSection': 'output'
+      'argName': '-f'
+      'type': 'exact'
+      'value': 'matroska'
+      'profile': 'mkv2mpegts_download'

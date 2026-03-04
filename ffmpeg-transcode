@@ -318,14 +318,18 @@ def profile_parameters(profiles):
         argNewAdded = False
       argName = None
   # Add any remaining output params that weren't matched or injected
+  # Insert before the last arg (output filename)
+  insertPos = len(parameters) - 1
   for argNameNew in argumentRepl["output"]:
     argValueNew = argumentRepl["output"][argNameNew]
     if argValueNew == "**REMOVE**":
       continue
     if not argNameNew in sys.argv:
-      parameters.append(argNameNew)
+      parameters.insert(insertPos, argNameNew)
+      insertPos += 1
       if argValueNew is not None:
-        parameters.append(argValueNew)
+        parameters.insert(insertPos, argValueNew)
+        insertPos += 1
   return parameters
 
 # ------------------------------------------------------------------------------

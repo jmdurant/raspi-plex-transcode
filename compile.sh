@@ -24,7 +24,7 @@ cd "$SCRIPT_DIR"
 # Prepare dependencies for the used distribution
 case $SYSTEM_DISTRO in
   Raspbian|Debian)
-    APT_INSTALL_PACKAGES="build-essential pkg-config nasm python3 python3-yaml libass-dev libaom-dev libxvidcore-dev libvorbis-dev libv4l-dev libx265-dev libx264-dev libwebp-dev libspeex-dev librtmp-dev libopus-dev libmp3lame-dev libdav1d-dev libopencore-amrnb-dev libopencore-amrwb-dev libsnappy-dev libsoxr-dev libssh-dev libxml2-dev libgmp-dev libfreetype-dev libssl-dev libvpx-dev"
+    APT_INSTALL_PACKAGES="build-essential pkg-config nasm wget patch python3 python3-yaml libass-dev libaom-dev libxvidcore-dev libvorbis-dev libv4l-dev libx265-dev libx264-dev libwebp-dev libspeex-dev librtmp-dev libopus-dev libmp3lame-dev libdav1d-dev libopencore-amrnb-dev libopencore-amrwb-dev libsnappy-dev libsoxr-dev libssh-dev libxml2-dev libgmp-dev libfreetype-dev libssl-dev libvpx-dev"
     ;;
   ManjaroLinux)
     APT_COMMAND="pamac install"

@@ -1,8 +1,23 @@
 #!/bin/bash
 
+set -e
+
 # Ensure the script directory is the current working directory
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd "$SCRIPT_DIR"
+
+# Check that the compiled ffmpeg binary exists
+if [ ! -f "$SCRIPT_DIR/plex-media-server-ffmpeg/ffmpeg" ]; then
+  echo "Compiled ffmpeg not found! Run ./compile.sh first."
+  exit 1
+fi
+
+# Check that the original plex transcoder exists
+if [ ! -f "/usr/lib/plexmediaserver/Plex Transcoder" ] && [ ! -L "/usr/lib/plexmediaserver/Plex Transcoder" ] && [ ! -f "/usr/lib/plexmediaserver/Plex Transcoder Backup" ]; then
+  echo "Plex Transcoder not found at /usr/lib/plexmediaserver/Plex Transcoder"
+  echo "Is Plex Media Server installed?"
+  exit 1
+fi
 
 # Create backup of original plex transcoder
 if [ ! -f "/usr/lib/plexmediaserver/Plex Transcoder Backup" ]; then

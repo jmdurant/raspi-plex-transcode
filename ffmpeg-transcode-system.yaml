@@ -2,7 +2,6 @@
 'ffmpeg': '/usr/bin/ffmpeg'
 'ffprobe': '/usr/bin/ffprobe'
 'log': '/var/lib/plexmediaserver/plex-transcoder.log'
-'debug': true
 'strip_plex_args': true
 'profiles':
   'mkv2mpegts_stream':
@@ -19,6 +18,15 @@
   'by_codec':
     -
       'source': 'hevc'
+      'target': 'h264_v4l2m2m'
+      'output':
+        '-b:v': '5M'
+        '-bufsize:$stream$': '10M'
+        '-crf:$stream$': '**REMOVE**'
+        '-maxrate:$stream$': '**REMOVE**'
+        '-x264opts:$stream$': '**REMOVE**'
+    -
+      'source': 'h264'
       'target': 'h264_v4l2m2m'
       'output':
         '-b:v': '5M'

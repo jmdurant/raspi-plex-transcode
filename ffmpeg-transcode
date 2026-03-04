@@ -154,11 +154,11 @@ def profile_select(config, arguments):
   isDirectStream = all(v == "copy" for k, v in arguments["output"].items() if k.startswith("-codec"))
   # Detect output resolution from scale filter — skip hw encoder for SD
   outputWidth = 0
-  for argKey, argVal in arguments["output"].items():
-    if argKey == "-filter_complex" and argVal:
-      scaleMatch = re.search(r'scale=w=(\d+)', argVal)
-      if scaleMatch:
-        outputWidth = int(scaleMatch.group(1))
+  for arg in sys.argv[1:]:
+    scaleMatch = re.search(r'scale=w=(\d+)', arg)
+    if scaleMatch:
+      outputWidth = int(scaleMatch.group(1))
+      break
   minHwWidth = config.get("min_hw_width", 1280)
   if "by_codec" in config["profile_select"] and not isDirectStream:
     probeBin = resolve_absolute_path(config["ffprobe"])

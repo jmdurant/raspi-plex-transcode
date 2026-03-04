@@ -2,6 +2,8 @@
 'ffmpeg': 'plex-media-server-ffmpeg/ffmpeg'
 'ffprobe': 'plex-media-server-ffmpeg/ffprobe'
 'log': '/var/lib/plexmediaserver/plex-transcoder.log'
+'strip_filters':
+  - 'yadif'
 'profiles':
   'mkv2mpegts_stream':
     'group': 'format'
@@ -36,6 +38,8 @@
     -
       'source': 'mpeg2video'
       'target': 'h264_v4l2m2m'
+      'input':
+        '-codec:$stream$': 'mpeg2_v4l2m2m'
       'output':
         '-b:v': '5M'
         '-bufsize:$stream$': '10M'

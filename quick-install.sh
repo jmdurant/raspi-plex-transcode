@@ -144,6 +144,16 @@ else
 fi
 
 echo ""
+
+# Restart Plex Media Server
+echo "Restarting Plex Media Server..."
+if sudo systemctl restart plexmediaserver; then
+  echo "[OK] Plex Media Server restarted"
+else
+  echo "WARNING: Failed to restart Plex. You may need to restart it manually."
+fi
+
+echo ""
 echo "=== Installation complete! ==="
 echo "Plex will now use h264_v4l2m2m hardware encoding on this Raspberry Pi."
 echo "Config: $SCRIPT_DIR/ffmpeg-transcode.yaml"

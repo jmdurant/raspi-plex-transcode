@@ -46,3 +46,11 @@ fi
 if [ ! -f "$SCRIPT_DIR/ffmpeg-transcode.yaml" ]; then
   cp "$SCRIPT_DIR/ffmpeg-transcode-example.yaml" "$SCRIPT_DIR/ffmpeg-transcode.yaml"
 fi
+
+# Restart Plex Media Server
+echo "Restarting Plex Media Server..."
+if sudo systemctl restart plexmediaserver; then
+  echo "Plex Media Server restarted successfully!"
+else
+  echo "WARNING: Failed to restart Plex. You may need to restart it manually."
+fi

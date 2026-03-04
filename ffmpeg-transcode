@@ -202,7 +202,10 @@ def profile_parameters(profiles):
       for argName in profile["output"]:
         argumentRepl["output"][argName] = profile["output"][argName]
   # Plex-specific args that standard FFmpeg doesn't understand
-  plexOnlyArgs = {"-loglevel_plex", "-xioerror", "-progressurl"}
+  # Args with values (flag + next arg both get removed)
+  plexArgsWithValue = {"-loglevel_plex", "-progressurl"}
+  # Args without values (flag only, no following arg)
+  plexArgsNoValue = {"-xioerror"}
 
   # Build parameter list
   parameters = []
@@ -211,11 +214,15 @@ def profile_parameters(profiles):
   argNewAdded = False
   skipNext = False
   for arg in sys.argv[1:]:
-    # Skip Plex-specific arguments and their values
+    # Skip value of a previously removed Plex arg
     if skipNext:
       skipNext = False
       continue
-    if arg in plexOnlyArgs:
+    # Skip Plex-specific flags (no value)
+    if arg in plexArgsNoValue:
+      continue
+    # Skip Plex-specific options (with value)
+    if arg in plexArgsWithValue:
       skipNext = True
       continue
     # Apply replacement if present

@@ -263,16 +263,24 @@ def profile_parameters(profiles):
           continue
       elif not arg.startswith("-"):
         arg = replacement
-    # Strip configured filters from -filter_complex values
-    if stripFilters and argName == "-filter_complex" and not arg.startswith("-"):
-      for filterName in stripFilters:
-        pattern = r'\[([^\]]+)\]' + re.escape(filterName) + r'(?:=[^\[]*)?\[([^\]]+)\];?\s*'
-        match = re.search(pattern, arg)
-        if match:
-          inputPad = match.group(1)
-          outputPad = match.group(2)
-          arg = arg[:match.start()] + arg[match.end():]
-          arg = arg.replace('[' + outputPad + ']', '[' + inputPad + ']')
+    # Process -filter_complex values
+    if argName == "-filter_complex" and not arg.startswith("-"):
+      # Strip configured filters (e.g., yadif)
+      if stripFilters:
+        for filterName in stripFilters:
+          pattern = r'\[([^\]]+)\]' + re.escape(filterName) + r'(?:=[^\[]*)?\[([^\]]+)\];?\s*'
+          match = re.search(pattern, arg)
+          if match:
+            inputPad = match.group(1)
+            outputPad = match.group(2)
+            arg = arg[:match.start()] + arg[match.end():]
+            arg = arg.replace('[' + outputPad + ']', '[' + inputPad + ']')
+      # Align scale width to multiple of 32 for h264_v4l2m2m compatibility
+      def align_width(m):
+        w = int(m.group(1))
+        aligned = ((w + 31) // 32) * 32
+        return 'scale=w=' + str(aligned)
+      arg = re.sub(r'scale=w=(\d+)', align_width, arg)
 
     # Check for end of input/output arguments
     if not argNewAdded and ((arg == "-i") or (arg == "-init_seg_name") or (arg == "-segment_header_filename")):

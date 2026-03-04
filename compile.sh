@@ -6,10 +6,10 @@ set -e
 SYSTEM_DISTRO=`lsb_release -s -i`
 
 # Settings for the compile script
-APT_COMMAND="apt install"
+APT_COMMAND="apt install -y"
 APT_INSTALL_PACKAGES=""
 FFMPEG_CONFIGURE_FLAGS_PLEX='--enable-decoder=png --enable-decoder=apng --enable-decoder=bmp --enable-decoder=mjpeg --enable-decoder=thp --enable-decoder=gif --enable-decoder=dirac --enable-decoder=ffv1 --enable-decoder=ffvhuff --enable-decoder=huffyuv --enable-decoder=rawvideo --enable-decoder=zero12v --enable-decoder=ayuv --enable-decoder=r210 --enable-decoder=v210 --enable-decoder=v210x --enable-decoder=v308 --enable-decoder=v408 --enable-decoder=v410 --enable-decoder=y41p --enable-decoder=yuv4 --enable-decoder=ansi --enable-decoder=alac --enable-decoder=flac --enable-decoder=vorbis --enable-decoder=opus --enable-decoder=pcm_f32be --enable-decoder=pcm_f32le --enable-decoder=pcm_f64be --enable-decoder=pcm_f64le --enable-decoder=pcm_lxf --enable-decoder=pcm_s16be --enable-decoder=pcm_s16be_planar --enable-decoder=pcm_s16le --enable-decoder=pcm_s16le_planar --enable-decoder=pcm_s24be --enable-decoder=pcm_s24le --enable-decoder=pcm_s24le_planar --enable-decoder=pcm_s32be --enable-decoder=pcm_s32le --enable-decoder=pcm_s32le_planar --enable-decoder=pcm_s8 --enable-decoder=pcm_s8_planar --enable-decoder=pcm_u16be --enable-decoder=pcm_u16le --enable-decoder=pcm_u24be --enable-decoder=pcm_u24le --enable-decoder=pcm_u32be --enable-decoder=pcm_u32le --enable-decoder=pcm_u8 --enable-decoder=pcm_alaw --enable-decoder=pcm_mulaw --enable-decoder=ass --enable-decoder=dvbsub --enable-decoder=dvdsub --enable-decoder=ccaption --enable-decoder=pgssub --enable-decoder=jacosub --enable-decoder=microdvd --enable-decoder=movtext --enable-decoder=mpl2 --enable-decoder=pjs --enable-decoder=realtext --enable-decoder=sami --enable-decoder=ssa --enable-decoder=stl --enable-decoder=subrip --enable-decoder=subviewer --enable-decoder=text --enable-decoder=vplayer --enable-decoder=webvtt --enable-decoder=xsub --enable-decoder=eac3_eae --enable-decoder=truehd_eae --enable-decoder=mlp_eae --enable-encoder=flac --enable-encoder=alac --enable-encoder=libvorbis --enable-encoder=libopus --enable-encoder=mjpeg --enable-encoder=wrapped_avframe --enable-encoder=ass --enable-encoder=dvbsub --enable-encoder=dvdsub --enable-encoder=movtext --enable-encoder=ssa --enable-encoder=subrip --enable-encoder=text --enable-encoder=webvtt --enable-encoder=xsub --enable-encoder=pcm_f32be --enable-encoder=pcm_f32le --enable-encoder=pcm_f64be --enable-encoder=pcm_f64le --enable-encoder=pcm_s8 --enable-encoder=pcm_s8_planar --enable-encoder=pcm_s16be --enable-encoder=pcm_s16be_planar --enable-encoder=pcm_s16le --enable-encoder=pcm_s16le_planar --enable-encoder=pcm_s24be --enable-encoder=pcm_s24le --enable-encoder=pcm_s24le_planar --enable-encoder=pcm_s32be --enable-encoder=pcm_s32le --enable-encoder=pcm_s32le_planar --enable-encoder=pcm_u8 --enable-encoder=pcm_u16be --enable-encoder=pcm_u16le --enable-encoder=pcm_u24be --enable-encoder=pcm_u24le --enable-encoder=pcm_u32be --enable-encoder=pcm_u32le --enable-encoder=eac3_eae'
-FFMPEG_CONFIGURE_FLAGS='--extra-cflags="-I/usr/local/include" --extra-ldflags="-L/usr/local/lib" --extra-libs="-lpthread -lm -latomic" --enable-gmp --enable-gpl --enable-libaom --enable-libass --enable-libdav1d --enable-libfreetype --enable-libmp3lame --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopus --enable-librtmp --enable-libsnappy --enable-libsoxr --enable-libssh --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-mmal --enable-eae --enable-nonfree --enable-version3 --target-os=linux --enable-pthreads --enable-openssl --enable-hardcoded-tables'
+FFMPEG_CONFIGURE_FLAGS='--extra-cflags="-I/usr/local/include" --extra-ldflags="-L/usr/local/lib" --extra-libs="-lpthread -lm -latomic" --enable-gmp --enable-gpl --enable-libaom --enable-libass --enable-libdav1d --enable-libfreetype --enable-libmp3lame --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopus --enable-librtmp --enable-libsnappy --enable-libsoxr --enable-libssh --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-eae --enable-nonfree --enable-version3 --target-os=linux --enable-pthreads --enable-openssl --enable-hardcoded-tables'
 FFMPEG_CONFIGURE_FLAGS="$FFMPEG_CONFIGURE_FLAGS $FFMPEG_CONFIGURE_FLAGS_PLEX"
 
 # Track tasks
@@ -23,8 +23,8 @@ cd "$SCRIPT_DIR"
 
 # Prepare dependencies for the used distribution
 case $SYSTEM_DISTRO in
-  Raspbian)
-    APT_INSTALL_PACKAGES="python3 python3-yaml libass-dev libaom-dev libxvidcore-dev libvorbis-dev libv4l-dev libx265-dev libx264-dev libwebp-dev libspeex-dev librtmp-dev libopus-dev libmp3lame-dev libdav1d-dev libopencore-amrnb-dev libopencore-amrwb-dev libsnappy-dev libsoxr-dev libssh-dev libxml2-dev"
+  Raspbian|Debian)
+    APT_INSTALL_PACKAGES="build-essential pkg-config nasm python3 python3-yaml libass-dev libaom-dev libxvidcore-dev libvorbis-dev libv4l-dev libx265-dev libx264-dev libwebp-dev libspeex-dev librtmp-dev libopus-dev libmp3lame-dev libdav1d-dev libopencore-amrnb-dev libopencore-amrwb-dev libsnappy-dev libsoxr-dev libssh-dev libxml2-dev libgmp-dev libfreetype-dev libssl-dev libvpx-dev"
     ;;
   ManjaroLinux)
     APT_COMMAND="pamac install"
@@ -106,13 +106,13 @@ if [ "$FFMPEG_COMPILE" == "yes" ]; then
   cd "$SCRIPT_DIR/plex-media-server-ffmpeg"
   # Apply patches
   echo "- Apply patches"
-  git apply "$SCRIPT_DIR/patches/0001-avcodec-v4l2_m2m_dec-dequeue-frame-if-input-isn-t-re.patch"
+  patch -p1 -N < "$SCRIPT_DIR/patches/0001-avcodec-v4l2_m2m_dec-dequeue-frame-if-input-isn-t-re.patch" || true
   # Configure
   echo "- Configure"
   eval "./configure $FFMPEG_CONFIGURE_FLAGS"
   # Compile
   echo "- Make"
-  make -j5
+  make -j$(nproc)
   cd "$SCRIPT_DIR"
   echo "$FFMPEG_CONFIGURE_FLAGS" > "$SCRIPT_DIR/ffmpeg-compiled"
 else

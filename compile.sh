@@ -1,9 +1,8 @@
 #!/bin/bash
 
-set -e
-
 # System information
-SYSTEM_DISTRO=`lsb_release -s -i`
+SYSTEM_DISTRO=$(lsb_release -s -i 2>/dev/null || echo "Unknown")
+echo "Detected distribution: $SYSTEM_DISTRO"
 
 # Settings for the compile script
 APT_COMMAND="apt install -y"
@@ -33,29 +32,31 @@ case $SYSTEM_DISTRO in
     FFMPEG_CONFIGURE_FLAGS="$FFMPEG_CONFIGURE_FLAGS $FFMPEG_CONFIGURE_FLAGS_PLEX"
     ;;
   *)
-    echo "Unsupported linux distribution: $SYSTEM_DISTRO"
+    echo "WARNING: Unsupported linux distribution: $SYSTEM_DISTRO"
     echo "!!! DEPENDENCIES WILL NOT BE INSTALLED - YOU WILL HAVE TO OBTAIN THEM MANUALLY !!!"
-    echo "$APT_INSTALL_PACKAGES" > "$SCRIPT_DIR/apt-packages-installed"
+    INSTALL_DEPENDENCIES="no"
     ;;
 esac
 
 # URL for the source code of the plex ffmpeg-fork
 PLEX_FFMPEG_SOURCE_URL="https://downloads.plex.tv/ffmpeg-source/plex-media-server-ffmpeg-gpl-62cc2bc17d.tar.gz"
 if [ -f "/usr/lib/plexmediaserver/Resources/LICENSE" ]; then
-  PLEX_FFMPEG_SOURCE_URL=`cat /usr/lib/plexmediaserver/Resources/LICENSE | grep 'Plex Transcoder' | sed 's/.*: //'`
+  PLEX_FFMPEG_SOURCE_URL_PARSED=$(cat /usr/lib/plexmediaserver/Resources/LICENSE | grep 'Plex Transcoder' | sed 's/.*: //' || true)
+  if [ -n "$PLEX_FFMPEG_SOURCE_URL_PARSED" ]; then
+    PLEX_FFMPEG_SOURCE_URL="$PLEX_FFMPEG_SOURCE_URL_PARSED"
+  fi
 fi
 PLEX_FFMPEG_SOURCE_URL_PRESENT=""
 if [ -f "$SCRIPT_DIR/ffmpeg-source-url" ]; then
-  PLEX_FFMPEG_SOURCE_URL_PRESENT=`cat "$SCRIPT_DIR/ffmpeg-source-url"`
+  PLEX_FFMPEG_SOURCE_URL_PRESENT=$(cat "$SCRIPT_DIR/ffmpeg-source-url")
   echo "Present ffmpeg source obtained from $PLEX_FFMPEG_SOURCE_URL_PRESENT"
 fi
 
 # Download source archive
 if [ "$PLEX_FFMPEG_SOURCE_URL" != "$PLEX_FFMPEG_SOURCE_URL_PRESENT" ]; then
   echo "Downloading latest ffmpeg source from: $PLEX_FFMPEG_SOURCE_URL"
-  wget -q "$PLEX_FFMPEG_SOURCE_URL" -O "$SCRIPT_DIR/plex-media-server-ffmpeg.tar.gz"
-  if [ ! -f "$SCRIPT_DIR/plex-media-server-ffmpeg.tar.gz" ]; then
-    echo "Download failed!"
+  if ! wget -q "$PLEX_FFMPEG_SOURCE_URL" -O "$SCRIPT_DIR/plex-media-server-ffmpeg.tar.gz"; then
+    echo "ERROR: Download failed!"
     exit 1
   fi
   echo "$PLEX_FFMPEG_SOURCE_URL" > "$SCRIPT_DIR/ffmpeg-source-url"
@@ -73,21 +74,27 @@ if [ "$EXTRACT_SOURCE" == "yes" ]; then
   rm -Rf "$SCRIPT_DIR/plex-media-server-ffmpeg"
   mkdir -p "$SCRIPT_DIR/plex-media-server-ffmpeg"
   cd "$SCRIPT_DIR/plex-media-server-ffmpeg"
-  tar -xf "$SCRIPT_DIR/plex-media-server-ffmpeg.tar.gz" --strip-components=1
+  if ! tar -xf "$SCRIPT_DIR/plex-media-server-ffmpeg.tar.gz" --strip-components=1; then
+    echo "ERROR: Failed to extract source archive!"
+    exit 1
+  fi
   cd "$SCRIPT_DIR"
   FFMPEG_COMPILE="yes"
 fi
 
 # Install dependencies
 if [ -f "$SCRIPT_DIR/apt-packages-installed" ]; then
-  APT_INSTALLED_PACKAGES=`cat "$SCRIPT_DIR/apt-packages-installed"`
+  APT_INSTALLED_PACKAGES=$(cat "$SCRIPT_DIR/apt-packages-installed")
   if [ "$APT_INSTALLED_PACKAGES" == "$APT_INSTALL_PACKAGES" ]; then
     INSTALL_DEPENDENCIES="no"
   fi
 fi
 if [ "$INSTALL_DEPENDENCIES" == "yes" ]; then
   echo "Installing missing apt packages"
-  eval "sudo $APT_COMMAND $APT_INSTALL_PARAMS $APT_INSTALL_PACKAGES"
+  if ! eval "sudo $APT_COMMAND $APT_INSTALL_PACKAGES"; then
+    echo "ERROR: Failed to install dependencies!"
+    exit 1
+  fi
   echo "$APT_INSTALL_PACKAGES" > "$SCRIPT_DIR/apt-packages-installed"
   FFMPEG_COMPILE="yes"
 fi
@@ -96,7 +103,7 @@ fi
 if [ ! -f "$SCRIPT_DIR/plex-media-server-ffmpeg/ffmpeg" ]; then
   FFMPEG_COMPILE="yes"
 elif [ -f "$SCRIPT_DIR/ffmpeg-compiled" ]; then
-  FFMPEG_CONFIGURE_FLAGS_USED=`cat "$SCRIPT_DIR/ffmpeg-compiled"`
+  FFMPEG_CONFIGURE_FLAGS_USED=$(cat "$SCRIPT_DIR/ffmpeg-compiled")
   if [ "$FFMPEG_CONFIGURE_FLAGS_USED" != "$FFMPEG_CONFIGURE_FLAGS" ]; then
     FFMPEG_COMPILE="yes"
   fi
@@ -106,17 +113,31 @@ fi
 if [ "$FFMPEG_COMPILE" == "yes" ]; then
   echo "Compiling ffmpeg"
   cd "$SCRIPT_DIR/plex-media-server-ffmpeg"
+  # Check that configure script exists
+  if [ ! -f "./configure" ]; then
+    echo "ERROR: configure script not found in source directory!"
+    echo "The source archive may have a different structure than expected."
+    ls -la "$SCRIPT_DIR/plex-media-server-ffmpeg/"
+    exit 1
+  fi
   # Apply patches
   echo "- Apply patches"
   patch -p1 -N < "$SCRIPT_DIR/patches/0001-avcodec-v4l2_m2m_dec-dequeue-frame-if-input-isn-t-re.patch" || true
   # Configure
   echo "- Configure"
-  eval "./configure $FFMPEG_CONFIGURE_FLAGS"
+  if ! eval "./configure $FFMPEG_CONFIGURE_FLAGS"; then
+    echo "ERROR: FFmpeg configure failed!"
+    exit 1
+  fi
   # Compile
   echo "- Make"
-  make -j$(nproc)
+  if ! make -j$(nproc); then
+    echo "ERROR: FFmpeg compilation failed!"
+    exit 1
+  fi
   cd "$SCRIPT_DIR"
   echo "$FFMPEG_CONFIGURE_FLAGS" > "$SCRIPT_DIR/ffmpeg-compiled"
+  echo "FFmpeg compiled successfully!"
 else
   echo "ffmpeg already up to date. Nothing to do."
 fi

@@ -317,6 +317,15 @@ def profile_parameters(profiles):
         argSection = "output"
         argNewAdded = False
       argName = None
+  # Add any remaining output params that weren't matched or injected
+  for argNameNew in argumentRepl["output"]:
+    argValueNew = argumentRepl["output"][argNameNew]
+    if argValueNew == "**REMOVE**":
+      continue
+    if not argNameNew in sys.argv:
+      parameters.append(argNameNew)
+      if argValueNew is not None:
+        parameters.append(argValueNew)
   return parameters
 
 # ------------------------------------------------------------------------------

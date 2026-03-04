@@ -116,7 +116,7 @@ if [ "$FFMPEG_COMPILE" == "yes" ]; then
   patch -p1 -N < "$SCRIPT_DIR/patches/0001-avcodec-v4l2_m2m_dec-dequeue-frame-if-input-isn-t-re.patch" || true
   # Configure
   echo "- Configure"
-  if ! eval "./configure $FFMPEG_CONFIGURE_FLAGS"; then
+  if ! eval "bash ./configure $FFMPEG_CONFIGURE_FLAGS"; then
     echo "ERROR: FFmpeg configure failed!"
     exit 1
   fi

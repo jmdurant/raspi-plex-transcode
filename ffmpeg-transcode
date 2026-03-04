@@ -217,7 +217,13 @@ def profile_parameters(profiles):
   # Strip configured filters only when using hardware encoder on HD/4K (progressive) content
   # SD content is typically interlaced and needs yadif for h264_v4l2m2m
   usingHwEncoder = any(v.endswith("_v4l2m2m") for v in argumentRepl["output"].values() if isinstance(v, str))
-  isHdContent = outputWidth == 0 or outputWidth >= minHwWidth
+  scaleWidth = 0
+  for arg in sys.argv[1:]:
+    sm = re.search(r'scale=w=(\d+)', arg)
+    if sm:
+      scaleWidth = int(sm.group(1))
+      break
+  isHdContent = scaleWidth == 0 or scaleWidth >= config.get("min_hw_width", 1280)
   stripFilters = config.get("strip_filters", []) if usingHwEncoder and isHdContent else []
 
   # When using system FFmpeg, strip Plex-specific args it doesn't understand

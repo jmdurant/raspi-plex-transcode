@@ -35,6 +35,15 @@
         '-maxrate:$stream$': '**REMOVE**'
         '-x264opts:$stream$': '**REMOVE**'
     -
+      'source': 'mpeg2video'
+      'target': 'h264_v4l2m2m'
+      'output':
+        '-b:v': '5M'
+        '-bufsize:$stream$': '10M'
+        '-crf:$stream$': '**REMOVE**'
+        '-maxrate:$stream$': '**REMOVE**'
+        '-x264opts:$stream$': '**REMOVE**'
+    -
       'source': 'flac'
       'target': 'aac'
       'output':

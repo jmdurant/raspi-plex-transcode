@@ -81,6 +81,7 @@ The default configuration handles these codec conversions:
 |--------|--------|-------|
 | hevc (h265) | h264_v4l2m2m | Hardware-encoded at 5Mbps |
 | h264 | h264_v4l2m2m | Hardware re-encode at 5Mbps |
+| mpeg2video | h264_v4l2m2m | Live TV hardware encode at 5Mbps |
 | flac | aac | Audio converted at 256k |
 | eac3 | aac | Audio converted at 256k |
 

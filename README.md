@@ -13,7 +13,27 @@ Brought to my attention by "fancybits" in the plex forums it is recommended to u
 
 https://forums.plex.tv/t/hardware-transcoding-for-raspberry-pi-4-plex-media-server/538779/236
 
-# TLDR Install
+# Quick Install (Recommended)
+
+Uses the system FFmpeg package — no compiling required. Works on Debian Bookworm and Raspberry Pi OS.
+
+```
+cd ~
+git clone https://github.com/jmdurant/raspi-plex-transcode.git
+cd raspi-plex-transcode
+./quick-install.sh
+```
+
+This will:
+- Install system FFmpeg (if not present) and verify `h264_v4l2m2m` hardware encoder support
+- Install `python3-yaml` dependency
+- Back up the original Plex Transcoder
+- Install the wrapper script and create the config
+- Restart Plex Media Server
+
+# Advanced Install (Compile Plex FFmpeg Fork)
+
+If you need Plex-specific codecs (EAE) or want to use Plex's FFmpeg fork instead of the system package:
 
 ```
 cd ~
@@ -25,6 +45,8 @@ cd raspi-plex-transcode
 ./install.sh
 ```
 
+Note: Compiling FFmpeg on a Raspberry Pi 4 can take 30-60 minutes.
+
 # Getting started
 
 Log into your pi (as user `pi`) and cd into your home directory. (You can install this somewhere else if you update the configuration file accordingly)
@@ -35,9 +57,10 @@ git clone https://github.com/jmdurant/raspi-plex-transcode.git
 cd raspi-plex-transcode
 ```
 
-From this point you can continue with one of the three utility script:
-- `compile.sh` Download the source of the plex ffmpeg-fork, install the required dependencies and compile it.
-- `install.sh` Replace the original plex transcoder
+From this point you can continue with one of the following utility scripts:
+- `quick-install.sh` **(Recommended)** Install using system FFmpeg with hardware encoding — no compiling needed
+- `compile.sh` Download the source of the plex ffmpeg-fork, install the required dependencies and compile it
+- `install.sh` Replace the original plex transcoder (after running compile.sh)
 - `uninstall.sh` Restore the original plex transcoder
 
 **IMPORTANT: Backup your stuff! I'm doing my best to make the process as safe as possible, but there is always the chance that something goes wrong. Be warned!**
